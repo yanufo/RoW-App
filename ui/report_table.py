@@ -231,7 +231,10 @@ def show_report_table():
     # Apply filters
     # --------------------------------------------------
 
-    filtered_df = df.copy()
+    filtered_df = df.copy().sort_values(
+        by="id",
+        ascending=False,
+    )
 
     if search_term:
 
