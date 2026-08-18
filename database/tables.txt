@@ -9,6 +9,7 @@ CREATE TABLE `file_detail` (
 `Status` varchar(50) NOT NULL DEFAULT 'Pending'
 ); 
 
+
 CREATE TABLE `Video_file` (
     `VideoID` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `Filename` varchar(250) NOT NULL,
