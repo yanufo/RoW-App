@@ -98,6 +98,17 @@ def show_report_table():
 
         return
 
+    # Initialize selection state
+    if "selected" not in st.session_state:
+        st.session_state.selected = {}
+
+    # Make sure every report has a selection state
+    for report in db_reports:
+        rid = report["id"]
+
+        if rid not in st.session_state.selected:
+            st.session_state.selected[rid] = False
+
     df = pd.DataFrame(db_reports)
 
     df["Inspection_Datetime"] = pd.to_datetime(
@@ -441,3 +452,66 @@ def show_report_table():
             ),
             unsafe_allow_html=True,
         )
+
+    # --------------------------------------------------
+    # Selection actions
+    # --------------------------------------------------
+
+    selected_ids = [
+        rid
+        for rid, is_selected
+        in st.session_state.selected.items()
+        if is_selected
+    ]
+
+    selected_reports = [
+        report
+        for report in db_reports
+        if report["id"] in selected_ids
+    ]
+
+    if selected_reports:
+
+        st.divider()
+
+        st.markdown(
+            f"**{len(selected_reports)} report(s) selected**"
+        )
+
+        action_col1, action_col2, action_col3, action_col4 = st.columns(4)
+
+        with action_col1:
+            if st.button(
+                "Select All",
+                use_container_width=True,
+            ):
+                # for rid in selected_ids:
+                #     st.session_state.selected[rid] = True
+                # st.rerun()
+                for rid in filtered_df["id"].tolist():
+                    st.session_state.selected[rid] = True
+
+        with action_col2:
+            if st.button(
+                "📄 Download Reports",
+                use_container_width=True,
+            ):
+                download_reports(selected_reports)
+
+        with action_col3:
+            if st.button(
+                "🎥 Download Videos",
+                use_container_width=True,
+            ):
+                download_videos(selected_reports)
+
+        with action_col4:
+            if st.button(
+                "✕ Clear Selection",
+                use_container_width=True,
+            ):
+                # for rid in selected_ids:
+                #     st.session_state.selected[rid] = False
+                for rid in filtered_df["id"].tolist():
+                    st.session_state.selected[rid] = False
+                st.rerun()
