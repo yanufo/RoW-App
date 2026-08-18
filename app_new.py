@@ -50,7 +50,7 @@ if "confirm_cancel" not in st.session_state:
 
 
 # --------------------------------------------------
-# New Report
+# New Report Button
 # --------------------------------------------------
 
 show_new_report()

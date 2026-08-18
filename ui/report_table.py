@@ -16,7 +16,7 @@ STATUS_OPTIONS = list(STATUS_COLORS.keys())
 
 
 COL_WEIGHTS = [
-    0.4,
+    0.6,
     3,
     0.7,
     1.8,
@@ -37,6 +37,16 @@ SORT_COLUMNS = {
     "Status": "Status",
 }
 
+SORT_OPTIONS = [
+    "Newest First",
+    "Filename",
+    "UAV ID",
+    "Inspection Date Time",
+    "Safe Clearance Distance (m)",
+    "Clearance Height (m)",
+    "Sensitivity",
+    "Status",
+]
 
 def status_badge_html(status):
 
@@ -62,6 +72,17 @@ def status_badge_html(status):
 def open_preview(report_id):
 
     st.session_state.preview_report_id = report_id
+
+def reset_filters(min_date, max_date):
+    st.session_state["uav_filter"] = []
+    st.session_state["status_filter"] = []
+    st.session_state["date_range"] = (min_date, max_date)
+    st.session_state["safe_range"] = (0, 200)
+    st.session_state["height_range"] = (0, 200)
+    st.session_state["sens_range"] = (1, 10)
+
+    st.session_state["sort_by"] = "Inspection Date Time"
+    st.session_state["sort_order"] = "Descending"
 
 
 def show_report_table():
@@ -114,65 +135,80 @@ def show_report_table():
 
     with st.expander("Filters & Sort"):
 
-        fc1, fc2, fc3 = st.columns(3)
+        f1, f2, f3 = st.columns(3)
 
-        uav_filter = fc1.multiselect(
+        uav_filter = f1.multiselect(
             "UAV ID",
             options=all_uav_ids,
-            default=all_uav_ids,
+            default=None,
+            key="uav_filter",
         )
 
-        status_filter = fc2.multiselect(
+        status_filter = f2.multiselect(
             "Status",
             options=STATUS_OPTIONS,
-            default=STATUS_OPTIONS,
+            default=None,
+            key="status_filter",
         )
 
-        date_range = fc3.date_input(
+        date_range = f3.date_input(
             "Inspection Date range",
             value=(min_date, max_date),
             min_value=min_date,
             max_value=max_date,
+            key="date_range",
         )
 
-        fc4, fc5, fc6 = st.columns(3)
+        f4, f5, f6 = st.columns(3)
 
-        safe_range = fc4.slider(
+        safe_range = f4.slider(
             "Safe Clearance Distance (m)",
             min_value=0,
             max_value=200,
             value=(0, 200),
+            key="safe_range",
         )
 
-        height_range = fc5.slider(
+        height_range = f5.slider(
             "Clearance Height (m)",
             min_value=0,
             max_value=200,
             value=(0, 200),
+            key="height_range",
         )
 
-        sens_range = fc6.slider(
+        sens_range = f6.slider(
             "Sensitivity",
             min_value=1,
             max_value=10,
             value=(1, 10),
+            key="sens_range",
         )
 
-        fc7, fc8 = st.columns(2)
+        f7, f8, f9 = st.columns(3)
 
-        sort_by = fc7.selectbox(
+        sort_by = f7.selectbox(
             "Sort by",
-            options=list(SORT_COLUMNS.keys()),
-            index=2,
+            options=SORT_OPTIONS,
+            index=0,
+            key="sort_by",
         )
 
-        sort_order = fc8.radio(
+        sort_order = f8.radio(
             "Order",
             options=[
                 "Descending",
                 "Ascending",
             ],
             horizontal=True,
+            key="sort_order",
+        )
+
+        reset_button = f9.button(
+            "Reset",
+            type="secondary",
+            on_click=reset_filters,
+            args=(min_date, max_date),
         )
 
     # --------------------------------------------------
@@ -207,60 +243,67 @@ def show_report_table():
             )
         ]
 
-    filtered_df = filtered_df[
-        filtered_df["UAV_ID"].isin(uav_filter)
-    ]
+    if uav_filter:
+        filtered_df = filtered_df[
+            filtered_df["UAV_ID"].isin(uav_filter)
+        ]
 
-    filtered_df = filtered_df[
-        filtered_df["Status"].isin(status_filter)
-    ]
+    if status_filter:
+        filtered_df = filtered_df[
+            filtered_df["Status"].isin(status_filter)
+        ]
 
-    filtered_df = filtered_df[
-        filtered_df["Inspection_Datetime"]
-        .dt.date
-        .between(
-            date_start,
-            date_end,
-        )
-    ]
+    if date_range:
+        filtered_df = filtered_df[
+            filtered_df["Inspection_Datetime"]
+            .dt.date
+            .between(
+                date_start,
+                date_end,
+            )
+        ]
 
-    filtered_df = filtered_df[
-        filtered_df[
-            "Safe_Clearance_Distance"
-        ].between(
-            safe_range[0],
-            safe_range[1],
-        )
-    ]
+    if safe_range:
+        filtered_df = filtered_df[
+            filtered_df[
+                "Safe_Clearance_Distance"
+            ].between(
+                safe_range[0],
+                safe_range[1],
+            )
+        ]
 
-    filtered_df = filtered_df[
-        filtered_df[
-            "Clearance_Height"
-        ].between(
-            height_range[0],
-            height_range[1],
-        )
-    ]
+    if height_range:
+        filtered_df = filtered_df[
+            filtered_df[
+                "Clearance_Height"
+            ].between(
+                height_range[0],
+                height_range[1],
+            )
+        ]
 
-    filtered_df = filtered_df[
-        filtered_df[
-            "Sensitivity"
-        ].between(
-            sens_range[0],
-            sens_range[1],
-        )
-    ]
+    if sens_range:
+        filtered_df = filtered_df[
+            filtered_df[
+                "Sensitivity"
+            ].between(
+                sens_range[0],
+                sens_range[1],
+            )
+        ]
 
     # --------------------------------------------------
     # Sort
     # --------------------------------------------------
 
-    filtered_df = filtered_df.sort_values(
-        by=SORT_COLUMNS[sort_by],
-        ascending=(
-            sort_order == "Ascending"
-        ),
-    )
+    if sort_by != "Newest First":
+        filtered_df = filtered_df.sort_values(
+            by=SORT_COLUMNS[sort_by],
+            ascending=(
+                sort_order == "Ascending"
+            ),
+        )
 
     st.caption(
         f"Showing {len(filtered_df)} "
@@ -295,7 +338,7 @@ def show_report_table():
     col_name.markdown("**Filename**")
     col_uav.markdown("**UAV ID**")
     col_time.markdown("**Inspection Date Time**")
-    col_safe.markdown("**Safe Clearance (m)**")
+    col_safe.markdown("**Safe Clearance Distance (m)**")
     col_height.markdown("**Clearance Height (m)**")
     col_sens.markdown("**Sensitivity**")
     col_status.markdown("**Status**")
