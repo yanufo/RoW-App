@@ -30,6 +30,7 @@ import streamlit.components.v1 as components
 import base64
 import pandas as pd
 import mysql.connector as mysql
+
 st.set_page_config(page_title="RoW Inspection Reports", layout="wide")
 
 st.title("RoW Inspection Reports")

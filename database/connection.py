@@ -11,8 +11,3 @@ def get_connection():
         password=os.getenv("DB_PASSWORD"),
         database=os.getenv("DB_NAME")
     )
-conn = get_connection()
-
-print("Connected successfully!")
-
-conn.close()
