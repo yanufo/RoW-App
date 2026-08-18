@@ -29,8 +29,6 @@ os.makedirs(BASE_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True) 
 
 
-if "preview_report_id" not in st.session_state:
-    st.session_state.preview_report_id = None
 # ---------------------------------------------------------------------------
 # Session state setup
 # ---------------------------------------------------------------------------
@@ -41,12 +39,9 @@ if "selected" not in st.session_state:
     st.session_state.selected = {}
 
 if "form_key" not in st.session_state:
-    # bumped after cancel/submit to reset the popover's widgets
     st.session_state.form_key = 0
 
 if "popover_open" not in st.session_state:
-    # controls whether the real st.popover element is mounted at all;
-    # remounting it fresh is how we force it to appear "closed"
     st.session_state.popover_open = True
 
 if "confirm_cancel" not in st.session_state:
