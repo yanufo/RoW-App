@@ -1,35 +1,22 @@
+import base64
 import io
-import shutil
-import zipfile
-import uuid
-from datetime import datetime, timezone
 import os
+import shutil
+import uuid
+import zipfile
+from datetime import datetime, timezone
+
+import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
-import base64
-import pandas as pd
 import mysql.connector as mysql
 
-conn = mysql.connect(
-    host="localhost",
-    user="admin",
-    password="Staero321",
-    database="row_database"
-)
+from database.connection import get_connection
 
 
+conn = get_connection()
+cursor = conn.cursor()
 
-import io
-import shutil
-import zipfile
-import uuid
-from datetime import datetime, timezone
-import os
-import streamlit as st
-import streamlit.components.v1 as components
-import base64
-import pandas as pd
-import mysql.connector as mysql
 
 st.set_page_config(page_title="RoW Inspection Reports", layout="wide")
 
