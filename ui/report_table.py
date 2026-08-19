@@ -5,6 +5,7 @@ import streamlit as st
 
 from database.queries import get_all_reports
 from ui.preview import preview_dialog
+from ui.download import download_dialog
 import yaml
 import os
 import zipfile,_frozen_importlib,shutil
@@ -355,6 +356,12 @@ def show_report_table():
         if is_selected
     ]
 
+    selected_reports = [
+        report
+        for report in db_reports
+        if report["id"] in selected_ids
+    ]
+
     if selected_ids:
         st.caption(
             f"Selected {len(selected_ids)} "
@@ -362,17 +369,19 @@ def show_report_table():
         )
 
         # st.write(report["Filename"])
-        col1,col2,col3,col4,col5 = st.columns(5)
+        col1,col2,col3 = st.columns(3)
         with col1:
             select_all_report = st.button('Select All',use_container_width=True)
         with col2:  
             clear_all_report = st.button('Clear All',use_container_width=True)
         with col3:
-            Download_all_video = st.button('Download Videos',use_container_width=True)   
-        with col4:  
-            Download_all_html = st.button('Download HTML',use_container_width=True)
-        with col5:  
-            Download_everything = st.button('Download Zipped Files',use_container_width=True)
+            download = st.button('Download',use_container_width=True)
+        # with col3:
+        #     Download_all_video = st.button('Download Videos',use_container_width=True)   
+        # with col4:  
+        #     Download_all_html = st.button('Download HTML',use_container_width=True)
+        # with col5:  
+        #     Download_everything = st.button('Download Zipped Files',use_container_width=True)
 
         if select_all_report:
             for rid in filtered_df["id"].tolist():
@@ -385,57 +394,60 @@ def show_report_table():
                 st.session_state[f"chk_{rid}"] = False
                 st.session_state.selected[rid] = False
             st.rerun()
+
+        if download:
+            download_dialog(selected_reports)
         
 
-        if Download_all_video:
+        # if Download_all_video:
 
-            # Open Save As dialog
-            root = tk.Tk()
-            root.withdraw()
+        #     # Open Save As dialog
+        #     root = tk.Tk()
+        #     root.withdraw()
 
-            destination_path = filedialog.asksaveasfilename(
-                title="Choose where to save the video",
-                defaultextension=".mp4",
-                filetypes=[
-                    ("MP4 video", "*.mp4"),
-                    ("All files", "*.*")
-                ]
-            )
+        #     destination_path = filedialog.asksaveasfilename(
+        #         title="Choose where to save the video",
+        #         defaultextension=".mp4",
+        #         filetypes=[
+        #             ("MP4 video", "*.mp4"),
+        #             ("All files", "*.*")
+        #         ]
+        #     )
 
-            root.destroy()
+        #     root.destroy()
 
-            # User selected a location
-            if destination_path:
+        #     # User selected a location
+        #     if destination_path:
 
-                for report in db_reports:
+        #         for report in db_reports:
 
-                    if report["id"] == check:
+        #             if report["id"] == check:
 
-                        video_path = os.path.join(
-                            OUTPUT_DIR,
-                            report["Filename"] + ".mp4"
-                        )
+        #                 video_path = os.path.join(
+        #                     OUTPUT_DIR,
+        #                     report["Filename"] + ".mp4"
+        #                 )
                         
-                        if os.path.exists(video_path):
+        #                 if os.path.exists(video_path):
 
-                            shutil.copy(video_path, destination_path)
+        #                     shutil.copy(video_path, destination_path)
 
-                            print(f"Video saved to: {destination_path}")
+        #                     print(f"Video saved to: {destination_path}")
 
-                        else:
-                            print(f"Video not found: {video_path}")
+        #                 else:
+        #                     print(f"Video not found: {video_path}")
 
-        if Download_all_html:
-                for report in db_reports:
+        # if Download_all_html:
+        #         for report in db_reports:
         
-                    if report["id"] == check:
+        #             if report["id"] == check:
         
-                        html_path = os.path.join(
-                            OUTPUT_DIR,
-                            report["Filename"] + 'html'
-                        )
+        #                 html_path = os.path.join(
+        #                     OUTPUT_DIR,
+        #                     report["Filename"] + 'html'
+        #                 )
 
-                        shutil.copy(html_path, destination_path)  # Replace destination_path with the desired path
+        #                 shutil.copy(html_path, destination_path)  # Replace destination_path with the desired path
         
             
 
@@ -576,11 +588,11 @@ def show_report_table():
         if is_selected
     ]
 
-    selected_reports = [
-        report
-        for report in db_reports
-        if report["id"] in selected_ids
-    ]
+    # selected_reports = [
+    #     report
+    #     for report in db_reports
+    #     if report["id"] in selected_ids
+    # ]
 
     
     
