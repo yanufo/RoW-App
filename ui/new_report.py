@@ -4,12 +4,16 @@ import subprocess
 from datetime import timezone
 
 import streamlit as st
+import yaml
+
+with open("config.yml", "r") as f:
+    config = yaml.safe_load(f)
 
 from database.queries import (
     has_processing_report,
     create_report,
 )
-from services.report_service import make_filename
+from services.report_service import add_files_to_input, make_filename
 
 
 def show_new_report():
@@ -190,6 +194,9 @@ def show_new_report():
                         sensitivity,
                     )
 
+                    add_files_to_input(config["directories"]["input"], [uploaded_video, uploaded_srt], filename)
+                        
+
                     report_db_id = create_report(
                         filename=filename,
                         uav_id=selected_id,
@@ -243,7 +250,7 @@ def show_new_report():
                     st.success(
                         f"Report '{filename}' created."
                     )
-
+                    
                     st.rerun()
 
     else:

@@ -1,9 +1,21 @@
+from tabnanny import check
+
 import pandas as pd
 import streamlit as st
 
 from database.queries import get_all_reports
 from ui.preview import preview_dialog
+import yaml
+import os
+import zipfile,_frozen_importlib,shutil
 
+
+import tkinter as tk
+from tkinter import filedialog
+with open("config.yml", "r") as f:
+    config = yaml.safe_load(f)
+
+OUTPUT_DIR = config["directories"]["output"]
 
 STATUS_COLORS = {
     "Queued": "#1E88E5",
@@ -13,7 +25,6 @@ STATUS_COLORS = {
 }
 
 STATUS_OPTIONS = list(STATUS_COLORS.keys())
-
 
 COL_WEIGHTS = [
     0.6,
@@ -368,9 +379,87 @@ def show_report_table():
         unsafe_allow_html=True,
     )
 
+
     # --------------------------------------------------
     # Rows
     # --------------------------------------------------
+    st.write(report["Filename"])
+    col1,col2,col3,col4,col5 = st.columns(5)
+    with col1:
+        select_all_report = st.button('Select All',use_container_width=True)
+    with col2:  
+        clear_all_report = st.button('Clear All',use_container_width=True)
+    with col3:  
+        Download_all_video = st.button('Download Videos',use_container_width=True)   
+    with col4:  
+        Download_all_html = st.button('Download HTML',use_container_width=True)
+    with col5:  
+        Download_everything = st.button('Download Zipped Files',use_container_width=True)
+
+    if select_all_report:
+        for rid in filtered_df["id"].tolist():
+            st.session_state[f"chk_{rid}"] = True
+            st.session_state.selected[rid] = True
+
+    if clear_all_report:
+        for rid in filtered_df["id"].tolist():
+            st.session_state[f"chk_{rid}"] = False
+            st.session_state.selected[rid] = False
+    
+
+    if Download_all_video:
+
+        # Open Save As dialog
+        root = tk.Tk()
+        root.withdraw()
+
+        destination_path = filedialog.asksaveasfilename(
+            title="Choose where to save the video",
+            defaultextension=".mp4",
+            filetypes=[
+                ("MP4 video", "*.mp4"),
+                ("All files", "*.*")
+            ]
+        )
+
+        root.destroy()
+
+        # User selected a location
+        if destination_path:
+
+            for report in db_reports:
+
+                if report["id"] == check:
+
+                    video_path = os.path.join(
+                        OUTPUT_DIR,
+                        report["Filename"] + ".mp4"
+                    )
+                    
+                    if os.path.exists(video_path):
+
+                        shutil.copy(video_path, destination_path)
+
+                        print(f"Video saved to: {destination_path}")
+
+                    else:
+                        print(f"Video not found: {video_path}")
+
+    if Download_all_html:
+            for report in db_reports:
+    
+                if report["id"] == check:
+    
+                    html_path = os.path.join(
+                        OUTPUT_DIR,
+                        report["Filename"] + 'html'
+                    )
+
+                    shutil.copy(html_path, destination_path)  # Replace destination_path with the desired path
+    
+    
+  
+
 
     for _, report in filtered_df.iterrows():
 
@@ -470,48 +559,51 @@ def show_report_table():
         if report["id"] in selected_ids
     ]
 
-    if selected_reports:
+    
+    
 
-        st.divider()
+    # if selected_reports:
 
-        st.markdown(
-            f"**{len(selected_reports)} report(s) selected**"
-        )
+    #     st.divider()
 
-        action_col1, action_col2, action_col3, action_col4 = st.columns(4)
+    #     st.markdown(
+    #         f"**{len(selected_reports)} report(s) selected**"
+    #     )
 
-        with action_col1:
-            if st.button(
-                "Select All",
-                use_container_width=True,
-            ):
-                # for rid in selected_ids:
-                #     st.session_state.selected[rid] = True
-                # st.rerun()
-                for rid in filtered_df["id"].tolist():
-                    st.session_state.selected[rid] = True
+    #     action_col1, action_col2, action_col3, action_col4 = st.columns(4)
 
-        with action_col2:
-            if st.button(
-                "📄 Download Reports",
-                use_container_width=True,
-            ):
-                download_reports(selected_reports)
+    #     with action_col1:
+    #         if st.button(
+    #             "Select All",
+    #             use_container_width=True,
+    #         ):
+    #             # for rid in selected_ids:
+    #             #     st.session_state.selected[rid] = True
+    #             # st.rerun()
+    #             for rid in filtered_df["id"].tolist():
+    #                 st.session_state.selected[rid] = True
 
-        with action_col3:
-            if st.button(
-                "🎥 Download Videos",
-                use_container_width=True,
-            ):
-                download_videos(selected_reports)
+    #     with action_col2:
+    #         if st.button(
+    #             "📄 Download Reports",
+    #             use_container_width=True,
+    #         ):
+    #             download_reports(selected_reports)
 
-        with action_col4:
-            if st.button(
-                "✕ Clear Selection",
-                use_container_width=True,
-            ):
-                # for rid in selected_ids:
-                #     st.session_state.selected[rid] = False
-                for rid in filtered_df["id"].tolist():
-                    st.session_state.selected[rid] = False
-                st.rerun()
+    #     with action_col3:
+    #         if st.button(
+    #             "🎥 Download Videos",
+    #             use_container_width=True,
+    #         ):
+    #             download_videos(selected_reports)
+
+    #     with action_col4:
+    #         if st.button(
+    #             "✕ Clear Selection",
+    #             use_container_width=True,
+    #         ):
+    #             # for rid in selected_ids:
+    #             #     st.session_state.selected[rid] = False
+    #             for rid in filtered_df["id"].tolist():
+    #                 st.session_state.selected[rid] = False
+    #             st.rerun()
