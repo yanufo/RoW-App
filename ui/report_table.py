@@ -12,6 +12,7 @@ import zipfile,_frozen_importlib,shutil
 
 import tkinter as tk
 from tkinter import filedialog
+
 with open("config.yml", "r") as f:
     config = yaml.safe_load(f)
 
@@ -345,7 +346,101 @@ def show_report_table():
         return
 
     # --------------------------------------------------
-    # Header
+    # Select All / Clear All / Download buttons
+    # --------------------------------------------------
+
+    selected_ids = [
+        rid
+        for rid, is_selected in st.session_state.selected.items()
+        if is_selected
+    ]
+
+    if selected_ids:
+        st.caption(
+            f"Selected {len(selected_ids)} "
+            f"report(s)."
+        )
+
+        # st.write(report["Filename"])
+        col1,col2,col3,col4,col5 = st.columns(5)
+        with col1:
+            select_all_report = st.button('Select All',use_container_width=True)
+        with col2:  
+            clear_all_report = st.button('Clear All',use_container_width=True)
+        with col3:
+            Download_all_video = st.button('Download Videos',use_container_width=True)   
+        with col4:  
+            Download_all_html = st.button('Download HTML',use_container_width=True)
+        with col5:  
+            Download_everything = st.button('Download Zipped Files',use_container_width=True)
+
+        if select_all_report:
+            for rid in filtered_df["id"].tolist():
+                st.session_state[f"chk_{rid}"] = True
+                st.session_state.selected[rid] = True
+            st.rerun()
+
+        if clear_all_report:
+            for rid in filtered_df["id"].tolist():
+                st.session_state[f"chk_{rid}"] = False
+                st.session_state.selected[rid] = False
+            st.rerun()
+        
+
+        if Download_all_video:
+
+            # Open Save As dialog
+            root = tk.Tk()
+            root.withdraw()
+
+            destination_path = filedialog.asksaveasfilename(
+                title="Choose where to save the video",
+                defaultextension=".mp4",
+                filetypes=[
+                    ("MP4 video", "*.mp4"),
+                    ("All files", "*.*")
+                ]
+            )
+
+            root.destroy()
+
+            # User selected a location
+            if destination_path:
+
+                for report in db_reports:
+
+                    if report["id"] == check:
+
+                        video_path = os.path.join(
+                            OUTPUT_DIR,
+                            report["Filename"] + ".mp4"
+                        )
+                        
+                        if os.path.exists(video_path):
+
+                            shutil.copy(video_path, destination_path)
+
+                            print(f"Video saved to: {destination_path}")
+
+                        else:
+                            print(f"Video not found: {video_path}")
+
+        if Download_all_html:
+                for report in db_reports:
+        
+                    if report["id"] == check:
+        
+                        html_path = os.path.join(
+                            OUTPUT_DIR,
+                            report["Filename"] + 'html'
+                        )
+
+                        shutil.copy(html_path, destination_path)  # Replace destination_path with the desired path
+        
+            
+
+    # --------------------------------------------------
+    # Table Header
     # --------------------------------------------------
 
     (
@@ -381,85 +476,11 @@ def show_report_table():
 
 
     # --------------------------------------------------
-    # Rows
+    # Table Rows
     # --------------------------------------------------
-    st.write(report["Filename"])
-    col1,col2,col3,col4,col5 = st.columns(5)
-    with col1:
-        select_all_report = st.button('Select All',use_container_width=True)
-    with col2:  
-        clear_all_report = st.button('Clear All',use_container_width=True)
-    with col3:  
-        Download_all_video = st.button('Download Videos',use_container_width=True)   
-    with col4:  
-        Download_all_html = st.button('Download HTML',use_container_width=True)
-    with col5:  
-        Download_everything = st.button('Download Zipped Files',use_container_width=True)
 
-    if select_all_report:
-        for rid in filtered_df["id"].tolist():
-            st.session_state[f"chk_{rid}"] = True
-            st.session_state.selected[rid] = True
-
-    if clear_all_report:
-        for rid in filtered_df["id"].tolist():
-            st.session_state[f"chk_{rid}"] = False
-            st.session_state.selected[rid] = False
-    
-
-    if Download_all_video:
-
-        # Open Save As dialog
-        root = tk.Tk()
-        root.withdraw()
-
-        destination_path = filedialog.asksaveasfilename(
-            title="Choose where to save the video",
-            defaultextension=".mp4",
-            filetypes=[
-                ("MP4 video", "*.mp4"),
-                ("All files", "*.*")
-            ]
-        )
-
-        root.destroy()
-
-        # User selected a location
-        if destination_path:
-
-            for report in db_reports:
-
-                if report["id"] == check:
-
-                    video_path = os.path.join(
-                        OUTPUT_DIR,
-                        report["Filename"] + ".mp4"
-                    )
-                    
-                    if os.path.exists(video_path):
-
-                        shutil.copy(video_path, destination_path)
-
-                        print(f"Video saved to: {destination_path}")
-
-                    else:
-                        print(f"Video not found: {video_path}")
-
-    if Download_all_html:
-            for report in db_reports:
-    
-                if report["id"] == check:
-    
-                    html_path = os.path.join(
-                        OUTPUT_DIR,
-                        report["Filename"] + 'html'
-                    )
-
-                    shutil.copy(html_path, destination_path)  # Replace destination_path with the desired path
-    
-    
-  
-
+    def update_selection(rid):
+        st.session_state.selected[rid] = st.session_state[f"chk_{rid}"]
 
     for _, report in filtered_df.iterrows():
 
@@ -484,9 +505,11 @@ def show_report_table():
             ),
             key=f"chk_{rid}",
             label_visibility="collapsed",
+            on_change=update_selection,
+            args=(rid,)
         )
 
-        st.session_state.selected[rid] = checked
+        # st.session_state.selected[rid] = checked
 
         c_name.button(
             report["Filename"],
@@ -501,35 +524,35 @@ def show_report_table():
         ]
 
         c_uav.markdown(
-            f'<span class="black-text">'
+            f'<span class="color: var(--text-color);">'
             f'{report["UAV_ID"]}'
             f'</span>',
             unsafe_allow_html=True,
         )
 
         c_time.markdown(
-            f'<span class="black-text">'
+            f'<span class="color: var(--text-color);">'
             f'{inspection_time.strftime("%Y-%m-%d %H:%M:%S")}'
             f'</span>',
             unsafe_allow_html=True,
         )
 
         c_safe.markdown(
-            f'<span class="black-text">'
+            f'<span class="color: var(--text-color);">'
             f'{report["Safe_Clearance_Distance"]}'
             f'</span>',
             unsafe_allow_html=True,
         )
 
         c_height.markdown(
-            f'<span class="black-text">'
+            f'<span class="color: var(--text-color);">'
             f'{report["Clearance_Height"]}'
             f'</span>',
             unsafe_allow_html=True,
         )
 
         c_sens.markdown(
-            f'<span class="black-text">'
+            f'<span class="color: var(--text-color);">'
             f'{report["Sensitivity"]}'
             f'</span>',
             unsafe_allow_html=True,
