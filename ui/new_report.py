@@ -102,14 +102,14 @@ def show_new_report():
                     key=f"sc_{fk}",
                 )
 
-                clearance_height = st.number_input(
-                    "Clearance Height (m)",
-                    min_value=0,
-                    max_value=200,
-                    step=1,
-                    value=None,
-                    key=f"ch_{fk}",
-                )
+                # clearance_height = st.number_input(
+                #     "Clearance Height (m)",
+                #     min_value=0,
+                #     max_value=200,
+                #     step=1,
+                #     value=None,
+                #     key=f"ch_{fk}",
+                # )
 
                 inspection_dt = st.datetime_input(
                     "Inspection Date Time",
@@ -117,12 +117,12 @@ def show_new_report():
                     key=f"dt_{fk}",
                 )
 
-                sensitivity = st.slider(
-                    "Sensitivity",
-                    min_value=1,
-                    max_value=10,
-                    key=f"sens_{fk}",
-                )
+                # sensitivity = st.slider(
+                #     "Sensitivity",
+                #     min_value=1,
+                #     max_value=10,
+                #     key=f"sens_{fk}",
+                # )
 
                 col1, col2 = st.columns(2)
 
@@ -146,9 +146,9 @@ def show_new_report():
                         "srt": uploaded_srt,
                         "uav": selected_id,
                         "safe_clearance": safe_clearance,
-                        "clearance_height": clearance_height,
+                        # "clearance_height": clearance_height,
                         "inspection_dt": inspection_dt,
-                        "sensitivity": sensitivity,
+                        # "sensitivity": sensitivity,
                     }
 
                     st.session_state.confirm_cancel = True
@@ -190,8 +190,8 @@ def show_new_report():
                         selected_id,
                         inspection_dt_utc,
                         safe_clearance,
-                        clearance_height,
-                        sensitivity,
+                        # clearance_height,
+                        # sensitivity,
                     )
 
                     add_files_to_input(config["directories"]["input"], [uploaded_video, uploaded_srt], filename)
@@ -202,8 +202,8 @@ def show_new_report():
                         uav_id=selected_id,
                         inspection_datetime=inspection_dt,
                         safe_clearance=safe_clearance,
-                        clearance_height=clearance_height,
-                        sensitivity=sensitivity,
+                        # clearance_height=clearance_height,
+                        # sensitivity=sensitivity,
                         status=status,
                     )
 
@@ -216,10 +216,10 @@ def show_new_report():
                         "Safe Clearance Distance (m)": str(
                             safe_clearance
                         ),
-                        "Clearance Height (m)": str(
-                            clearance_height
-                        ),
-                        "Sensitivity": str(sensitivity),
+                        # "Clearance Height (m)": str(
+                        #     clearance_height
+                        # ),
+                        # "Sensitivity": str(sensitivity),
                         "Status": status,
                         "video_name": uploaded_video.name,
                         "srt_name": uploaded_srt.name,

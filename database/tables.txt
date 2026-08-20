@@ -4,13 +4,11 @@ CREATE TABLE `file_detail` (
 `UAV_ID` int NOT NULL,
 `Inspection_Datetime` datetime NOT NULL,
 `Safe_Clearance_Distance` int NOT NULL,
-`Clearance_Height` int NOT NULL,
-`Sensitivity` int NOT NULL,
 `Status` varchar(50) NOT NULL DEFAULT 'Pending'
 ); 
 
 
-CREATE TABLE `Video_file` (
+CREATE TABLE `video_file` (
     `VideoID` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `Filename` varchar(250) NOT NULL,
     `Filepath` varchar(500) NOT NULL,

@@ -12,8 +12,6 @@ def get_all_reports():
             UAV_ID,
             Inspection_Datetime,
             Safe_Clearance_Distance,
-            Clearance_Height,
-            Sensitivity,
             Status
         FROM row_database.file_detail
     """)
@@ -37,8 +35,6 @@ def get_report_by_id(report_id):
             UAV_ID,
             Inspection_Datetime,
             Safe_Clearance_Distance,
-            Clearance_Height,
-            Sensitivity,
             Status,
             Filepath,
             HTML_path
@@ -79,8 +75,6 @@ def create_report(
     uav_id,
     inspection_datetime,
     safe_clearance,
-    clearance_height,
-    sensitivity,
     status,
 ):
     conn = get_connection()
@@ -92,18 +86,14 @@ def create_report(
             UAV_ID,
             Inspection_Datetime,
             Safe_Clearance_Distance,
-            Clearance_Height,
-            Sensitivity,
             Status
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s)
     """, (
         filename,
         uav_id,
         inspection_datetime,
         safe_clearance,
-        clearance_height,
-        sensitivity,
         status,
     ))
 

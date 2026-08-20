@@ -29,14 +29,12 @@ STATUS_COLORS = {
 STATUS_OPTIONS = list(STATUS_COLORS.keys())
 
 COL_WEIGHTS = [
-    0.6,
+    1,
+    6,
+    2,
     3,
-    0.7,
-    1.8,
-    1.5,
-    1.3,
-    0.9,
-    1.1,
+    3,
+    1
 ]
 
 
@@ -45,8 +43,8 @@ SORT_COLUMNS = {
     "UAV ID": "UAV_ID",
     "Inspection Date Time": "Inspection_Datetime",
     "Safe Clearance Distance (m)": "Safe_Clearance_Distance",
-    "Clearance Height (m)": "Clearance_Height",
-    "Sensitivity": "Sensitivity",
+    # "Clearance Height (m)": "Clearance_Height",
+    # "Sensitivity": "Sensitivity",
     "Status": "Status",
 }
 
@@ -56,8 +54,8 @@ SORT_OPTIONS = [
     "UAV ID",
     "Inspection Date Time",
     "Safe Clearance Distance (m)",
-    "Clearance Height (m)",
-    "Sensitivity",
+    # "Clearance Height (m)",
+    # "Sensitivity",
     "Status",
 ]
 
@@ -91,8 +89,8 @@ def reset_filters(min_date, max_date):
     st.session_state["status_filter"] = []
     st.session_state["date_range"] = (min_date, max_date)
     st.session_state["safe_range"] = (0, 200)
-    st.session_state["height_range"] = (0, 200)
-    st.session_state["sens_range"] = (1, 10)
+    # st.session_state["height_range"] = (0, 200)
+    # st.session_state["sens_range"] = (1, 10)
 
     st.session_state["sort_by"] = "Inspection Date Time"
     st.session_state["sort_order"] = "Descending"
@@ -159,7 +157,7 @@ def show_report_table():
 
     with st.expander("Filters & Sort"):
 
-        f1, f2, f3 = st.columns(3)
+        f1, f2, f3, f4 = st.columns(4)
 
         uav_filter = f1.multiselect(
             "UAV ID",
@@ -183,7 +181,8 @@ def show_report_table():
             key="date_range",
         )
 
-        f4, f5, f6 = st.columns(3)
+        # f4, f5, f6 = st.columns(3)
+        # f4 = st.columns(1)
 
         safe_range = f4.slider(
             "Safe Clearance Distance (m)",
@@ -193,21 +192,21 @@ def show_report_table():
             key="safe_range",
         )
 
-        height_range = f5.slider(
-            "Clearance Height (m)",
-            min_value=0,
-            max_value=200,
-            value=(0, 200),
-            key="height_range",
-        )
+        # height_range = f5.slider(
+        #     "Clearance Height (m)",
+        #     min_value=0,
+        #     max_value=200,
+        #     value=(0, 200),
+        #     key="height_range",
+        # )
 
-        sens_range = f6.slider(
-            "Sensitivity",
-            min_value=1,
-            max_value=10,
-            value=(1, 10),
-            key="sens_range",
-        )
+        # sens_range = f6.slider(
+        #     "Sensitivity",
+        #     min_value=1,
+        #     max_value=10,
+        #     value=(1, 10),
+        #     key="sens_range",
+        # )
 
         f7, f8, f9 = st.columns(3)
 
@@ -300,25 +299,25 @@ def show_report_table():
             )
         ]
 
-    if height_range:
-        filtered_df = filtered_df[
-            filtered_df[
-                "Clearance_Height"
-            ].between(
-                height_range[0],
-                height_range[1],
-            )
-        ]
+    # if height_range:
+    #     filtered_df = filtered_df[
+    #         filtered_df[
+    #             "Clearance_Height"
+    #         ].between(
+    #             height_range[0],
+    #             height_range[1],
+    #         )
+    #     ]
 
-    if sens_range:
-        filtered_df = filtered_df[
-            filtered_df[
-                "Sensitivity"
-            ].between(
-                sens_range[0],
-                sens_range[1],
-            )
-        ]
+    # if sens_range:
+    #     filtered_df = filtered_df[
+    #         filtered_df[
+    #             "Sensitivity"
+    #         ].between(
+    #             sens_range[0],
+    #             sens_range[1],
+    #         )
+    #     ]
 
     # --------------------------------------------------
     # Sort
@@ -461,8 +460,8 @@ def show_report_table():
         col_uav,
         col_time,
         col_safe,
-        col_height,
-        col_sens,
+        # col_height,
+        # col_sens,
         col_status,
     ) = st.columns(COL_WEIGHTS)
 
@@ -471,8 +470,8 @@ def show_report_table():
     col_uav.markdown("**UAV ID**")
     col_time.markdown("**Inspection Date Time**")
     col_safe.markdown("**Safe Clearance Distance (m)**")
-    col_height.markdown("**Clearance Height (m)**")
-    col_sens.markdown("**Sensitivity**")
+    # col_height.markdown("**Clearance Height (m)**")
+    # col_sens.markdown("**Sensitivity**")
     col_status.markdown("**Status**")
 
     st.markdown(
@@ -504,8 +503,8 @@ def show_report_table():
             c_uav,
             c_time,
             c_safe,
-            c_height,
-            c_sens,
+            # c_height,
+            # c_sens,
             c_status,
         ) = st.columns(COL_WEIGHTS)
 
@@ -556,19 +555,19 @@ def show_report_table():
             unsafe_allow_html=True,
         )
 
-        c_height.markdown(
-            f'<span class="color: var(--text-color);">'
-            f'{report["Clearance_Height"]}'
-            f'</span>',
-            unsafe_allow_html=True,
-        )
+        # c_height.markdown(
+        #     f'<span class="color: var(--text-color);">'
+        #     f'{report["Clearance_Height"]}'
+        #     f'</span>',
+        #     unsafe_allow_html=True,
+        # )
 
-        c_sens.markdown(
-            f'<span class="color: var(--text-color);">'
-            f'{report["Sensitivity"]}'
-            f'</span>',
-            unsafe_allow_html=True,
-        )
+        # c_sens.markdown(
+        #     f'<span class="color: var(--text-color);">'
+        #     f'{report["Sensitivity"]}'
+        #     f'</span>',
+        #     unsafe_allow_html=True,
+        # )
 
         c_status.markdown(
             status_badge_html(
