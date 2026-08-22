@@ -47,38 +47,9 @@ def inject_preview_drawer_css():
     )
 
 
-def video_player(video_bytes, timestamps):
+def video_player(video_bytes):
 
     video_b64 = base64.b64encode(video_bytes).decode()
-
-    timestamp_buttons = ""
-
-    for ts in sorted(
-        timestamps,
-        key=lambda t: t["seconds"],
-    ):
-
-        seconds = ts["seconds"]
-        label = ts["label"]
-
-        timestamp_buttons += f"""
-        <button
-            onclick="seekVideo({seconds})"
-            style="
-                display:block;
-                width:100%;
-                margin:5px 0;
-                padding:8px;
-                text-align:left;
-                border:1px solid #ddd;
-                border-radius:6px;
-                background:#f8f9fa;
-                cursor:pointer;
-            "
-        >
-            ⏱ {format_mmss(seconds)} — {label}
-        </button>
-        """
 
     html = f"""
     <!DOCTYPE html>
@@ -100,10 +71,6 @@ def video_player(video_bytes, timestamps):
             >
 
         </video>
-
-        <h4>Critical Timestamps</h4>
-
-        {timestamp_buttons}
 
         <script>
 
@@ -142,7 +109,7 @@ def preview_dialog(report_id):
         st.error("Report not found.")
         return
 
-    st.caption(report["Filename"])
+    st.caption(report["filename"])
 
     tab_report, tab_video = st.tabs(
         ["📄 Report", "🎬 Processed Video"]
@@ -150,7 +117,7 @@ def preview_dialog(report_id):
 
     with tab_report:
 
-        html_path = report["HTML_path"]
+        html_path = report["report_path"]
 
         if os.path.exists(html_path):
 
@@ -169,7 +136,7 @@ def preview_dialog(report_id):
             st.download_button(
                 "⬇ Download report",
                 data=html_bytes,
-                file_name=report["Filename"] + ".html",
+                file_name=report["filename"] + ".html",
                 mime="text/html",
                 key=f"dl_report_{report_id}",
             )
@@ -182,27 +149,21 @@ def preview_dialog(report_id):
 
     with tab_video:
 
-        video_path = report["Filepath"]
+        video_path = report["video_path"]
 
         if os.path.exists(video_path):
 
             with open(video_path, "rb") as f:
                 video_bytes = f.read()
 
-            timestamps = report.get(
-                "critical_timestamps",
-                [],
-            )
-
             video_player(
                 video_bytes,
-                timestamps,
             )
 
             st.download_button(
                 "⬇ Download video",
                 data=video_bytes,
-                file_name=report["Filename"] + ".mp4",
+                file_name=report["filename"] + ".mp4",
                 mime="video/mp4",
                 key=f"dl_video_{report_id}",
             )

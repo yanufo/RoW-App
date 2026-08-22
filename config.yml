@@ -1,3 +1,6 @@
 directories:
-  input: "/home/gve/Documents/EGAT/RoW-App/test_data/input"
-  output: "/home/gve/Documents/EGAT/RoW-App/test_data/output"
+  # input: "/home/gve/Documents/EGAT/RoW-App/test_data/input"
+  # output: "/home/gve/Documents/EGAT/RoW-App/test_data/output"
+
+  input: "/Users/wongwanyan/Documents/Staero/EGAT/row-app/test_data/input"
+  output: "/Users/wongwanyan/Documents/Staero/EGAT/row-app/test_data/output"

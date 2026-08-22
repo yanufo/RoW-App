@@ -1,0 +1,19 @@
+# Table to store all relevant information for report list display on the app
+CREATE TABLE `reports` (
+`id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+`filename` varchar(250) NOT NULL,
+`uav_id` int NOT NULL,
+`inspection_datetime` datetime NOT NULL,
+`safe_clearance_distance` int NOT NULL,
+`status` varchar(50) NOT NULL DEFAULT 'Pending'
+); 
+
+# Table to store output file paths of every uploaded report
+CREATE TABLE `report_files` (
+    `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `report_id` int NOT NULL,
+    `report_path` varchar(500) NOT NULL,
+    `video_path` varchar(250) NOT NULL,
+
+    FOREIGN KEY (`report_id`) REFERENCES `reports`(`id`)
+); 

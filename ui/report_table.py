@@ -39,13 +39,13 @@ COL_WEIGHTS = [
 
 
 SORT_COLUMNS = {
-    "Filename": "Filename",
-    "UAV ID": "UAV_ID",
-    "Inspection Date Time": "Inspection_Datetime",
-    "Safe Clearance Distance (m)": "Safe_Clearance_Distance",
-    # "Clearance Height (m)": "Clearance_Height",
-    # "Sensitivity": "Sensitivity",
-    "Status": "Status",
+    "Filename": "filename",
+    "UAV ID": "uav_id",
+    "Inspection Date Time": "inspection_datetime",
+    "Safe Clearance Distance (m)": "safe_clearance_distance",
+    # "Clearance Height (m)": "clearance_height",
+    # "Sensitivity": "sensitivity",
+    "Status": "status",
 }
 
 SORT_OPTIONS = [
@@ -122,8 +122,8 @@ def show_report_table():
 
     df = pd.DataFrame(db_reports)
 
-    df["Inspection_Datetime"] = pd.to_datetime(
-        df["Inspection_Datetime"]
+    df["inspection_datetime"] = pd.to_datetime(
+        df["inspection_datetime"]
     )
 
     # --------------------------------------------------
@@ -140,13 +140,13 @@ def show_report_table():
     # --------------------------------------------------
 
     all_uav_ids = sorted(
-        df["UAV_ID"]
+        df["uav_id"]
         .dropna()
         .unique()
         .tolist()
     )
 
-    all_dates = df["Inspection_Datetime"].dt.date
+    all_dates = df["inspection_datetime"].dt.date
 
     min_date = all_dates.min()
     max_date = all_dates.max()
@@ -262,7 +262,7 @@ def show_report_table():
     if search_term:
 
         filtered_df = filtered_df[
-            filtered_df["Filename"].str.contains(
+            filtered_df["filename"].str.contains(
                 search_term,
                 case=False,
                 na=False,
@@ -271,17 +271,17 @@ def show_report_table():
 
     if uav_filter:
         filtered_df = filtered_df[
-            filtered_df["UAV_ID"].isin(uav_filter)
+            filtered_df["uav_id"].isin(uav_filter)
         ]
 
     if status_filter:
         filtered_df = filtered_df[
-            filtered_df["Status"].isin(status_filter)
+            filtered_df["status"].isin(status_filter)
         ]
 
     if date_range:
         filtered_df = filtered_df[
-            filtered_df["Inspection_Datetime"]
+            filtered_df["inspection_datetime"]
             .dt.date
             .between(
                 date_start,
@@ -292,7 +292,7 @@ def show_report_table():
     if safe_range:
         filtered_df = filtered_df[
             filtered_df[
-                "Safe_Clearance_Distance"
+                "safe_clearance_distance"
             ].between(
                 safe_range[0],
                 safe_range[1],
@@ -302,7 +302,7 @@ def show_report_table():
     # if height_range:
     #     filtered_df = filtered_df[
     #         filtered_df[
-    #             "Clearance_Height"
+    #             "clearance_height"
     #         ].between(
     #             height_range[0],
     #             height_range[1],
@@ -523,7 +523,7 @@ def show_report_table():
         # st.session_state.selected[rid] = checked
 
         c_name.button(
-            report["Filename"],
+            report["filename"],
             key=f"btn_{rid}",
             use_container_width=True,
             on_click=open_preview,
@@ -531,12 +531,12 @@ def show_report_table():
         )
 
         inspection_time = report[
-            "Inspection_Datetime"
+            "inspection_datetime"
         ]
 
         c_uav.markdown(
             f'<span class="color: var(--text-color);">'
-            f'{report["UAV_ID"]}'
+            f'{report["uav_id"]}'
             f'</span>',
             unsafe_allow_html=True,
         )
@@ -550,28 +550,28 @@ def show_report_table():
 
         c_safe.markdown(
             f'<span class="color: var(--text-color);">'
-            f'{report["Safe_Clearance_Distance"]}'
+            f'{report["safe_clearance_distance"]}'
             f'</span>',
             unsafe_allow_html=True,
         )
 
         # c_height.markdown(
         #     f'<span class="color: var(--text-color);">'
-        #     f'{report["Clearance_Height"]}'
+        #     f'{report["clearance_height"]}'
         #     f'</span>',
         #     unsafe_allow_html=True,
         # )
 
         # c_sens.markdown(
         #     f'<span class="color: var(--text-color);">'
-        #     f'{report["Sensitivity"]}'
+        #     f'{report["sensitivity"]}'
         #     f'</span>',
         #     unsafe_allow_html=True,
         # )
 
         c_status.markdown(
             status_badge_html(
-                report["Status"]
+                report["status"]
             ),
             unsafe_allow_html=True,
         )

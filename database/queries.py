@@ -8,12 +8,12 @@ def get_all_reports():
     cursor.execute("""
         SELECT
             id,
-            Filename,
-            UAV_ID,
-            Inspection_Datetime,
-            Safe_Clearance_Distance,
-            Status
-        FROM row_database.file_detail
+            filename,
+            uav_id,
+            inspection_datetime,
+            safe_clearance_distance,
+            status
+        FROM row_database.reports
     """)
 
     reports = cursor.fetchall()
@@ -28,19 +28,33 @@ def get_report_by_id(report_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
+    # cursor.execute("""
+    #     SELECT
+    #         id,
+    #         filename,
+    #         uav_id,
+    #         inspection_datetime,
+    #         safe_clearance_distance,
+    #         status
+    #     FROM row_database.reports
+    #     WHERE id = %s
+    # """, (report_id,))
+
     cursor.execute("""
-        SELECT
-            id,
-            Filename,
-            UAV_ID,
-            Inspection_Datetime,
-            Safe_Clearance_Distance,
-            Status,
-            Filepath,
-            HTML_path
-        FROM row_database.file_detail
-        WHERE id = %s
-    """, (report_id,))
+    SELECT
+        r.id,
+        r.filename,
+        r.uav_id,
+        r.inspection_datetime,
+        r.safe_clearance_distance,
+        r.status,
+        rf.report_path,
+        rf.video_path
+    FROM row_database.reports AS r
+    LEFT JOIN row_database.report_files AS rf
+        ON r.id = rf.report_id
+    WHERE r.id = %s
+""", (report_id,))
 
     report = cursor.fetchone()
 
@@ -48,6 +62,24 @@ def get_report_by_id(report_id):
     conn.close()
 
     return report
+
+def insert_report_files(report_id, report_path, video_path):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO row_database.report_files (
+        report_id, 
+        report_path, 
+        video_path
+        )
+        VALUES (%s, %s, %s)
+    """, (report_id, report_path, video_path))
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
 
 
 def has_processing_report():
@@ -57,8 +89,8 @@ def has_processing_report():
     cursor.execute("""
         SELECT EXISTS (
             SELECT 1
-            FROM row_database.file_detail
-            WHERE Status = 'Processing'
+            FROM row_database.reports
+            WHERE status = 'Processing'
         )
     """)
 
@@ -81,12 +113,12 @@ def create_report(
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO row_database.file_detail (
-            Filename,
-            UAV_ID,
-            Inspection_Datetime,
-            Safe_Clearance_Distance,
-            Status
+        INSERT INTO row_database.reports (
+            filename,
+            uav_id,
+            inspection_datetime,
+            safe_clearance_distance,
+            status
         )
         VALUES (%s, %s, %s, %s, %s)
     """, (
@@ -112,8 +144,8 @@ def update_report_status(report_id, status):
     cursor = conn.cursor()
 
     cursor.execute("""
-        UPDATE row_database.file_detail
-        SET Status = %s
+        UPDATE row_database.reports
+        SET status = %s
         WHERE id = %s
     """, (status, report_id))
 

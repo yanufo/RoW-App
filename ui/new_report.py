@@ -12,6 +12,7 @@ with open("config.yml", "r") as f:
 from database.queries import (
     has_processing_report,
     create_report,
+    insert_report_files,
 )
 from services.report_service import add_files_to_input, make_filename
 
@@ -206,6 +207,14 @@ def show_new_report():
                         # sensitivity=sensitivity,
                         status=status,
                     )
+
+                    # Update video_file table in database, mimic airflow updating the database after processing is complete
+                    output_dir = config["directories"]["output"]    
+                    report_path = os.path.join(output_dir, f"{filename}.html")
+                    out_vid_path = os.path.join(output_dir, f"{filename}.mp4")
+                    insert_report_files(report_db_id, report_path, out_vid_path)
+
+
 
                     report = {
                         "id": report_uuid,
