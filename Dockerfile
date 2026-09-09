@@ -57,6 +57,16 @@ RUN python -m nuitka \
     --output-dir=/build/compiled/ui \
     ui/preview.py
 
+RUN python -m nuitka \
+    --module \
+    --output-dir=/build/compiled/ui \
+    ui/drone_model.py
+
+RUN python -m nuitka \
+    --module \
+    --output-dir=/build/compiled/ui \
+    ui/usagi_model.py
+
 
 # -------------------------
 # SQL
