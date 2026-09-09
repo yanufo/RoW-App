@@ -57,16 +57,6 @@ RUN python -m nuitka \
     --output-dir=/build/compiled/ui \
     ui/preview.py
 
-RUN python -m nuitka \
-    --module \
-    --output-dir=/build/compiled/ui \
-    ui/usagi_model.py
-
-RUN python -m nuitka \
-    --module \
-    --output-dir=/build/compiled/ui \
-    ui/drone_model.py
-
 
 # -------------------------
 # SQL
@@ -112,6 +102,12 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /build/requirements.txt /tmp/requirements.txt
 
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# =========================
+# 3D Models
+# =========================
+
+COPY --from=builder /build/models /app/models
 
 
 # =========================

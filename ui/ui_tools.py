@@ -6,6 +6,7 @@ from pathlib import Path
 import requests
 from ui.download import download_dialog, download_dialog_solar
 
+# region Global Constants 
 STATUS_COLORS = {
     "Queued": "#1E88E5",
     "Processing": "#FB8C00",
@@ -17,6 +18,8 @@ COL_WEIGHTS_2 = [1,6,2,3,1]
 STATUS_OPTIONS = ['Queued','Processing','Failed','Completed']
 SORT_OPTIONS = ["Newest First","Filename","UAV ID","Inspection Date Time","Safe Clearance Distance (m)","Status",]
 SORT_OPTIONS_SOLAR = ["Newest First","Filename","UAV ID","Inspection Date Time","Safe Clearance Distance (m)","Status",]
+
+# endregion Global Constants
 
 def stop_airflow_run(dag_id, dag_run_id):
 
