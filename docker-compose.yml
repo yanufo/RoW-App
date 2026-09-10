@@ -11,7 +11,7 @@ services:
       - /home:/home
       - /data:/data
       - /inspection:/inspection
-      - /home/gve/.streamlit:/root/.streamlit
+      # - /home/gve/.streamlit:/root/.streamlit
       - /home/gve/Downloads/row_inspection_renew/models:/models
       - /inspection/config.yml:/inspection/config.yml
 
