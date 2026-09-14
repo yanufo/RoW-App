@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone application
-RUN git clone https://github.com/yanufo/Row_APP_V1.5.git .
+RUN git clone https://github.com/yanufo/RoW-App.git.
 
 COPY requirements.txt .
 
