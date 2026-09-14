@@ -38,29 +38,29 @@ def new_report_dialog():
     # Selection screen
     if st.session_state.inspection_type is None:
 
-        col1, col2 = st.columns(2)
+        #col1, col2= st.columns(2)
 
-        with col1:
-            st.button(
-                "Row Inspection",
-                use_container_width=True,
-                on_click=lambda: setattr(
-                    st.session_state,
-                    "inspection_type",
-                    "row",
-                ),
-            )
+        
+        st.button(
+            "Row Inspection",
+            use_container_width=True,
+            on_click=lambda: setattr(
+                st.session_state,
+                "inspection_type",
+                "row",
+            ),
+        )
 
-        with col2:
-            st.button(
-                "Solar Inspection",
-                use_container_width=True,
-                on_click=lambda: setattr(
-                    st.session_state,
-                    "inspection_type",
-                    "solar",
-                ),
-            )
+        # with col2:
+        #     st.button(
+        #         "Solar Inspection",
+        #         use_container_width=True,
+        #         on_click=lambda: setattr(
+        #             st.session_state,
+        #             "inspection_type",
+        #             "solar",
+        #         ),
+        #     )
 
         return
 

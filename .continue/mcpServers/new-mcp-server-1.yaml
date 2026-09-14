@@ -1,0 +1,11 @@
+name: git
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: git
+    command: python3
+    args:
+      - -m
+      - mcp_server_git
+      - --repository
+      - "/home/gve/Downloads/row_inspection_renew"

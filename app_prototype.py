@@ -23,16 +23,15 @@ row_reports = st.Page(
     icon="⚡️",
 )
 
-solar_reports = st.Page(
-    "pages/Solar_report.py",
-    title="Solar Reports",
-    icon="☀️",
-)
+# solar_reports = st.Page(
+#     "pages/Solar_report.py",
+#     title="Solar Reports",
+#     icon="☀️",
+# )
 
 pg = st.navigation([
     home,
-    row_reports,
-    solar_reports,
+    row_reports
 ])
 
 pg.run()

@@ -1,0 +1,8 @@
+name: doc-checker
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: doc-checker
+    command: python3
+    args:
+      - "/home/gve/Downloads/check_file.py"
