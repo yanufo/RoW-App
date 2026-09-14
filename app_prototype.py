@@ -13,8 +13,6 @@ st.set_page_config(
 
 # App's version number
 __version__ = "0.1.0"
-
-st.sidebar.markdown("---")
 st.sidebar.caption(f"Prototype v{__version__}")
 
 
