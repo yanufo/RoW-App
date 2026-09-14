@@ -11,6 +11,13 @@ st.set_page_config(
     layout="wide",
 )
 
+# App's version number
+__version__ = "0.1.0"
+
+st.sidebar.markdown("---")
+st.sidebar.caption(f"Prototype v{__version__}")
+
+
 home = st.Page(
     "pages/home.py",
     title="Home",
