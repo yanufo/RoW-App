@@ -21,8 +21,12 @@ services:
     depends_on:
       - mysql
 
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+
+    networks:
+      - meiji-network
+
 
 
   mysql:
@@ -40,6 +44,13 @@ services:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
+    networks:
+      - meiji-network
+
 
 volumes:
   mysql_data:
+
+networks:
+  meiji-network:
+    external: true
