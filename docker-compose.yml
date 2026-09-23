@@ -25,7 +25,8 @@ services:
     #   - "host.docker.internal:host-gateway"
 
     networks:
-      - meiji-network
+      # - meiji-network
+      - airflow-network
 
 
 
@@ -45,7 +46,8 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
     networks:
-      - meiji-network
+      # - meiji-network
+      - airflow-network
 
 
 volumes:
@@ -53,4 +55,6 @@ volumes:
 
 networks:
   meiji-network:
+    external: true
+  airflow-network:
     external: true
