@@ -24,7 +24,7 @@ SORT_OPTIONS_SOLAR = ["Newest First","Filename","UAV ID","Inspection Date Time",
 def stop_airflow_run(dag_id, dag_run_id):
 
     url = (
-        f"http://host.docker.internal:8083/api/v1/"
+        f"http://host.docker.internal:8082/api/v1/"
         f"dags/{dag_id}/dagRuns/{dag_run_id}"
     )
 
