@@ -1,0 +1,60 @@
+# Streamlit app_prototype standalone deployment
+# This file runs only the Streamlit app with MySQL connectivity
+# Usage: docker compose -f docker-compose.streamlit.yml up -d
+
+services:
+  gateway:
+    build: ./gateway
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"  # Map to host IP
+  streamlit-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: streamlit-app_prototype
+
+    ports:
+      - "8501:8501"
+
+    volumes:
+      - /home:/home
+      - /data:/data
+      - /inspection:/inspection
+      - ./models:/models
+      - ./app_prototype.py:/app/app_prototype.py
+      - ./pages:/app/pages
+      - ./ui:/app/ui
+      - ./services:/app/services
+
+    env_file:
+      - .env
+
+    environment:
+      # Override STREAMLIT settings
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER.headless=true
+      # MySQL connection settings
+      - DB_HOST=mysql-shared
+      - DB_PORT=3306
+      - DB_USER=streamlit_user
+      - DB_PASSWORD=gve
+      - DB_NAME=row_database
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "mysql-shared:host.docker.internal"
+
+    depends_on:
+      mysql-shared:
+        condition: service_healthy
+
+    networks:
+      - row-inspection-network
+
+# Connect to the existing mysql-shared container
+# We use external network to connect to already running MySQL
+networks:
+  row-inspection-network:
+    external: true

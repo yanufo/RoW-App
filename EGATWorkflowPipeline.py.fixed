@@ -1,0 +1,503 @@
+from datetime import datetime, timedelta
+from airflow import DAG
+from airflow.operators.bash_operator import BashOperator
+
+from airflow.decorators import task
+from airflow.utils.trigger_rule import TriggerRule
+import mysql.connector as mysql
+import os,json
+from pathlib import Path
+
+default_args = {
+'owner'                 : 'gec',
+'description'           : '',
+'depend_on_past'        : False,
+'start_date'            : datetime(2021, 1, 1),
+'email_on_failure'      : False,
+'email_on_retry'        : False,
+'retries'               : 0,
+'retry_delay'           : timedelta(minutes=5),
+}
+
+
+
+@task
+def insert_dag_run_to_database(**context):
+
+    dag_run = context["dag_run"]
+    dag_run_id = dag_run.run_id
+    monitored_path = dag_run.conf["MonitoredPath"]
+    
+    
+    inspection_subfolder = dag_run.conf["InspectionSubfolder"]
+    inspection_subfolder = os.path.splitext(inspection_subfolder)[0]
+    
+    if "row" in str(monitored_path):
+        conn = mysql.connect(
+            host="mysql-shared",
+            user="streamlit_user",
+            password="gve",
+            database="row_database",
+            port=3306
+        )
+        cursor = conn.cursor()
+        # Find this report
+        cursor.execute("""
+            SELECT id, Status
+            FROM reports
+            WHERE Filename = %s
+              AND Status IN (%s, %s)
+        """, (
+            inspection_subfolder,
+            "Processing",
+            "Queued"
+        ))
+
+        result = cursor.fetchone()
+
+        if result is None:
+            cursor.close()
+            conn.close()
+            raise ValueError(
+                f"No database record found for {inspection_subfolder}"
+            )
+
+        report_db_id = result[0]
+        current_status = result[1]
+    
+
+        # Check if another report is currently processing
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM reports
+            WHERE Status = %s
+              AND id != %s
+        """, (
+            "Processing",
+            report_db_id
+        ))
+
+        processing_count = cursor.fetchone()[0]
+
+        # Only change Queued -> Processing if nothing else is processing
+        if current_status == "Queued" and processing_count == 0:
+            cursor.execute("""
+                UPDATE reports
+                SET Status = %s,
+                    dag_run_id = %s
+                WHERE id = %s
+            """, (
+                "Processing",
+                dag_run_id,
+                report_db_id
+            ))
+
+            print(f"{inspection_subfolder} is now Processing")
+
+        else:
+            # Still save the DAG run ID, but leave status as Queued
+            cursor.execute("""
+                UPDATE reports
+                SET dag_run_id = %s
+                WHERE id = %s
+            """, (
+                dag_run_id,
+                report_db_id
+            ))
+
+            print(
+                f"{inspection_subfolder} remains Queued "
+                f"because another report is Processing"
+            )
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+        print(f"Saved DAG run ID: {dag_run_id}")
+        print(f"Inspection: {inspection_subfolder}")
+    if "solar" in str(monitored_path):
+        conn = mysql.connect(
+            host="mysql-shared",
+            user="streamlit_user",
+            password="gve",
+            database="row_database",
+            port=3306
+        )
+        cursor = conn.cursor()
+        # Find this report
+        cursor.execute("""
+            SELECT id, Status
+            FROM solar_reports
+            WHERE Filename = %s
+              AND Status IN (%s, %s)
+        """, (
+            inspection_subfolder,
+            "Processing",
+            "Queued"
+        ))
+
+        result = cursor.fetchone()
+
+        if result is None:
+            cursor.close()
+            conn.close()
+            raise ValueError(
+                f"No database record found for {inspection_subfolder}"
+            )
+
+        report_db_id = result[0]
+        current_status = result[1]
+    
+
+        # Check if another report is currently processing
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM solar_reports
+            WHERE Status = %s
+              AND id != %s
+        """, (
+            "Processing",
+            report_db_id
+        ))
+
+        processing_count = cursor.fetchone()[0]
+
+        # Only change Queued -> Processing if nothing else is processing
+        if current_status == "Queued" and processing_count == 0:
+            cursor.execute("""
+                UPDATE solar_reports
+                SET Status = %s,
+                    dag_run_id = %s
+                WHERE id = %s
+            """, (
+                "Processing",
+                dag_run_id,
+                report_db_id
+            ))
+
+            print(f"{inspection_subfolder} is now Processing")
+
+        else:
+            # Still save the DAG run ID, but leave status as Queued
+            cursor.execute("""
+                UPDATE solar_reports
+                SET dag_run_id = %s
+                WHERE id = %s
+            """, (
+                dag_run_id,
+                report_db_id
+            ))
+
+            print(
+                f"{inspection_subfolder} remains Queued "
+                f"because another report is Processing"
+            )
+
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+        print(f"Saved DAG run ID: {dag_run_id}")
+        print(f"Inspection: {inspection_subfolder}")
+    return report_db_id
+    
+@task(trigger_rule=TriggerRule.ALL_DONE)
+def send_pipeline_status(report_db_id, **context):
+
+    dag_run = context["dag_run"]
+    monitored_path = dag_run.conf["MonitoredPath"]
+
+    failed_tasks = []
+
+    conn = mysql.connect(
+        host="mysql-shared",
+        user="streamlit_user",
+        password="gve",
+        database="row_database",
+        port=3306
+    )
+
+    cursor = conn.cursor()
+    if "row" in str(monitored_path):
+        for task_instance in dag_run.get_task_instances():
+
+            if task_instance.state == "failed":
+                failed_tasks.append(task_instance.task_id)
+
+        if failed_tasks:
+            status = "FAILED"
+            message = f"Failed tasks: {', '.join(failed_tasks)}"
+
+            cursor.execute(
+                """
+                UPDATE reports
+                SET STATUS = %s
+                WHERE id = %s
+                """,
+                ("Failed", report_db_id)
+            )
+
+        else:
+            status = "SUCCESS"
+            message = "All tasks completed successfully."
+
+            cursor.execute(
+                """
+                UPDATE reports
+                SET STATUS = %s
+                WHERE id = %s
+                """,
+                ("Completed", report_db_id)
+            )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        print(status)
+        print(message)
+    if "solar" in str(monitored_path):
+        for task_instance in dag_run.get_task_instances():
+
+            if task_instance.state == "failed":
+                failed_tasks.append(task_instance.task_id)
+
+        if failed_tasks:
+            status = "FAILED"
+            message = f"Failed tasks: {', '.join(failed_tasks)}"
+
+            cursor.execute(
+                """
+                UPDATE solar_reports
+                SET STATUS = %s
+                WHERE id = %s
+                """,
+                ("Failed", report_db_id)
+            )
+
+        else:
+            status = "SUCCESS"
+            message = "All tasks completed successfully."
+
+            cursor.execute(
+                """
+                UPDATE solar_reports
+                SET STATUS = %s
+                WHERE id = %s
+                """,
+                ("Completed", report_db_id)
+            )
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        print(status)
+        print(message)
+    
+@task
+def get_output_paths(report_db_id,**context):
+
+    conn = mysql.connect(
+        host="mysql-shared",
+        user="streamlit_user",
+        password="gve",
+        database="row_database",
+        port=3306
+    )
+    dag_run = context["dag_run"]
+    monitored_path = dag_run.conf["MonitoredPath"]
+    if "row" in str(monitored_path):
+        inspection_subfolder = context["dag_run"].conf["InspectionSubfolder"]
+        filename = os.path.splitext(inspection_subfolder)[0] #name of the file
+        output_dir = "/data/EGAT/inspections/output/row//"
+        current_folder = "/data/EGAT/inspections/row//"
+        json_path = Path(current_folder) / f"{filename}.json"
+        with open(json_path, "r") as f:
+            data = json.load(f)
+
+        vp_upload_path = data["vp_upload_path"]
+        
+        debug_dir = Path(vp_upload_path).parent / "Debug"
+        print(debug_dir)
+        mp4_files = list(debug_dir.glob("*.mp4"))
+
+        video_path = os.path.join(output_dir, f"{filename}.mp4")
+        srt_path = os.path.join(output_dir, f"{filename}.srt")
+        html_path = os.path.join(output_dir, f"{filename}.html")
+        print("Output directory:", output_dir)
+        print("MP4 files found:", mp4_files)
+
+        debug_video_path = str(mp4_files[0])
+        cursor = conn.cursor()
+        cursor.execute(
+                """
+                INSERT INTO report_files
+                (report_id,report_path,video_path,debug_path) VALUES (%s,%s,%s,%s)
+                """,
+                (report_db_id,html_path,video_path,debug_video_path)
+            )
+        conn.commit()
+        cursor.close()
+        conn.close()
+    if "solar" in str(monitored_path):
+        inspection_subfolder = context["dag_run"].conf["InspectionSubfolder"]
+        filename = os.path.splitext(inspection_subfolder)[0] #name of the file
+        output_dir = "/data/EGAT/inspections/output/solar//"
+        current_folder = "/data/EGAT/inspections/solar//"
+     
+        video_path = os.path.join(output_dir, f"{filename}.mp4")
+        srt_path = os.path.join(output_dir, f"{filename}.srt")
+        html_path = os.path.join(output_dir, f"{filename}.html")
+       
+        cursor = conn.cursor()
+        cursor.execute(
+                """
+                INSERT INTO solar_report_files
+                (report_id,report_path,video_path) VALUES (%s,%s,%s)
+                """,
+                (report_db_id,html_path,video_path,)
+            )
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+@task
+def send_pipeline_status(dag_run_input, **context):
+    """Update the database with the final status of the pipeline"""
+    dag_run = context["dag_run"]
+    monitored_path = dag_run.conf.get("MonitoredPath", "")
+    
+    if "row" in str(monitored_path):
+        try:
+            conn = mysql.connect(
+                host="mysql-shared",
+                user="streamlit_user",
+                password="gve",
+                database="row_database",
+                port=3306
+            )
+            cursor = conn.cursor()
+            
+            inspection_subfolder = dag_run.conf["InspectionSubfolder"]
+            inspection_subfolder = os.path.splitext(inspection_subfolder)[0]
+            
+            # Update status to Completed
+            cursor.execute("""
+                UPDATE reports
+                SET Status = %s
+                WHERE Filename = %s
+            """, (
+                "Completed",
+                inspection_subfolder
+            ))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print(f"Status updated to Completed for {inspection_subfolder}")
+        except Exception as e:
+            print(f"Error updating status: {e}")
+    print(f"Pipeline status update completed for run: {dag_run.run_id}")
+
+
+@task  
+def get_output_paths(dag_run_input, **context):
+    """Get and log the output paths for the inspection report"""
+    dag_run = context["dag_run"]
+    monitored_path = dag_run.conf.get("MonitoredPath", "")
+    
+    inspection_subfolder = dag_run.conf["InspectionSubfolder"]
+    inspection_subfolder = os.path.splitext(inspection_subfolder)[0]
+    
+    output_path = f"/data/EGAT/Output/{inspection_subfolder}"
+    video_path = f"{output_path}/videos"
+    html_path = f"{output_path}/report.html"
+    
+    print(f"Output path: {output_path}")
+    print(f"Video path: {video_path}")
+    print(f"HTML report: {html_path}")
+    
+    return {
+        "output_path": output_path,
+        "video_path": video_path,
+        "html_path": html_path
+    }
+
+
+
+with DAG('EGATWorkflowPipeline', 
+    default_args=default_args,
+    schedule_interval=None,
+    max_active_runs=1,
+    catchup=False) as dag:
+    insert_dag_run = insert_dag_run_to_database()
+    t1 = BashOperator(
+        task_id='EGATBatchModule',
+        trigger_rule='none_failed',
+        bash_command='docker run --init --rm --gpus device=all --network="host" --ipc=host $Mount $Module \
+            --MonitoredPath "$MonitoredPath" --Workflow "$Workflow" --InspectionSubfolder "$InspectionSubfolder" \
+            ',
+        env={
+            
+            'MonitoredPath': '{{ dag_run.conf["MonitoredPath"] }}',
+            'InspectionSubfolder': '{{ dag_run.conf["InspectionSubfolder"] }}',
+            'Workflow': '{{ dag_run.conf["Workflow"] }}',
+
+            'Mount': '-v /home:/home -v /media:/media -v /mnt:/mnt \
+            -v /data:/data -v /tmp/.X11-unix:/tmp/.X11-unix \
+            -v /deployment/EGAT/EGAT_BDM_P3/Config:/App/Config \
+            -v /deployment/EGAT/EGAT_BDM_P3/Database:/App/Database', 
+
+            'Module': 'harbor.je.gec.local/dronet_gve/egatbdmp3-tensorrt-23.04-py3'
+        }
+        )
+    # REMEMBER TO CHANGE OUTPUT FOLDER and SFTP address
+    t2 = BashOperator(
+        task_id='EGATFTPUpload',
+        trigger_rule='none_failed',
+        bash_command='docker run --init --rm --gpus device=all --network="host" --ipc=host $Mount $Module \
+            --MonitoredPath "$MonitoredPath" --InspectionSubfolder "$InspectionSubfolder" \
+            --Workflow "$Workflow" \
+            ',
+        env={
+            
+            'MonitoredPath': '{{ dag_run.conf["MonitoredPath"] }}',
+            'InspectionSubfolder': '{{ dag_run.conf["InspectionSubfolder"] }}',
+            'Workflow': '{{ dag_run.conf["Workflow"] }}',
+
+            'Mount': '-v /home:/home -v /media:/media -v /mnt:/mnt \
+            -v /data:/data -v /tmp/.X11-unix:/tmp/.X11-unix \
+            -v /deployment/EGAT/EGAT_FTP_Upload/Config:/App/Config',
+
+            'Module': 'harbor.je.gec.local/dronet_gve/egatftpupload'
+        }
+        )
+    t3 = BashOperator(
+        task_id='EGATWorkflowCleanup',
+        trigger_rule='none_failed',
+        bash_command='docker run --init --rm --gpus device=all --network="host" --ipc=host $Mount $Module \
+            --MonitoredPath "$MonitoredPath" --InspectionSubfolder "$InspectionSubfolder" \
+            --Workflow "$Workflow" --CleanupInspectionFiles {{ params.CleanupInspectionFiles }} \
+            ',
+        env={
+            
+            'MonitoredPath': '{{ dag_run.conf["MonitoredPath"] }}',
+            'InspectionSubfolder': '{{ dag_run.conf["InspectionSubfolder"] }}',
+            'Workflow': '{{ dag_run.conf["Workflow"] }}',
+
+            'Mount': '-v /home:/home -v /media:/media -v /mnt:/mnt \
+            -v /data:/data -v /tmp/.X11-unix:/tmp/.X11-unix',
+                
+            'Module': 'harbor.je.gec.local/dronet_gve/egatworkflowcleanup'
+        },
+        params={
+            'CleanupInspectionFiles' : 1 # Change to 1 to cleanup inspection files
+        }
+        )
+    send_status = send_pipeline_status(insert_dag_run)
+    get_output = get_output_paths(insert_dag_run)
+    
+    insert_dag_run >> t1 >> t2 >> get_output >> t3 >> send_status
+    #t1 >> t2 >> t3

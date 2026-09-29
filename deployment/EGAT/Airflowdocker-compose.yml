@@ -1,0 +1,101 @@
+# Airflow EGAT Deployment Configuration
+# This docker-compose file deploys the Streamlit app for EGAT workflow with Airflow integration
+# Usage: docker compose -f deployment/EGAT/Airflowdocker-compose.yml up -d
+
+services:
+  # Streamlit Application
+  row-streamlit-app:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    
+    container_name: egat-row-streamlit-app
+    
+    ports:
+      - "8502:8501"
+    
+    volumes:
+      # Host mounts for data persistence (adjust paths as needed for EGAT environment)
+      - /home:/host_home
+      - /data:/data
+      - /inspection:/inspection
+      # Local model files
+      - ../../models:/app/models
+      # Optional: Mount local config override
+      # - ../../.env:/app/.env
+    
+    environment:
+      # Airflow API connectivity
+      - AIRFLOW_URL=http://172.25.0.1:8083
+      - AIRFLOW_API_USER=airflow
+      - AIRFLOW_API_PASSWORD=airflow
+      # Database connectivity (external MySQL shared)
+      - DB_HOST=mysql-shared
+      - DB_PORT=3306
+      - DB_USER=streamlit_user
+      - DB_PASSWORD=gve
+      - DB_NAME=row_database
+      # Streamlit server settings
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER.headless=true
+    
+    env_file:
+      - .env
+    
+    extra_hosts:
+      # Allow access to host machine from container
+      - "host.docker.internal:host-gateway"
+    
+    depends_on:
+      mysql-shared:
+        condition: service_healthy
+    
+    networks:
+      - egat-airflow-network
+    
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # External MySQL shared service placeholder
+  # This should connect to an existing MySQL service in the EGAT environment
+  # For now, we use a placeholder that expects mysql-shared to be available externally
+  mysql-shared:
+    image: mysql:8.0
+    container_name: egat-row-mysql
+    restart: unless-stopped
+    
+    environment:
+      MYSQL_ROOT_PASSWORD: gve
+      MYSQL_DATABASE: row_database
+      MYSQL_USER: streamlit_user
+      MYSQL_PASSWORD: gve
+    
+    volumes:
+      # Persist MySQL data (adjust path for EGAT environment)
+      - mysql_data:/var/lib/mysql
+      # Mount initialization scripts
+      - ../../init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    
+    networks:
+      - egat-airflow-network
+    
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mysql_data:
+
+networks:
+  # Use the existing airflow-network to connect with Airflow services
+  egat-airflow-network:
+    external: true
+    name: airflow-network
