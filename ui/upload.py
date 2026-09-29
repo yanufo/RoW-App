@@ -1,6 +1,7 @@
 from asyncio import sleep
 import os
 import uuid
+import requests
 from datetime import timezone
 
 import streamlit as st
@@ -23,6 +24,47 @@ from services.report_service import (
 
 with open("/inspection/config.yml", "r") as f:
     config = yaml.safe_load(f)
+
+
+def trigger_airflow_dag(filename, inspection_type="row"):
+    """Trigger the EGATWorkflowPipeline DAG with the given inspection subfolder."""
+    airflow_url = os.getenv("AIRFLOW_URL", "http://172.25.0.1:8083")
+    airflow_user = os.getenv("AIRFLOW_API_USER", "airflow")
+    airflow_pass = os.getenv("AIRFLOW_API_PASSWORD", "airflow")
+    
+    dag_id = "EGATWorkflowPipeline"
+    
+    # Determine the monitored path and workflow based on inspection type
+    if inspection_type == "solar":
+        monitored_path = "/data/EGAT/inspections/solar"
+        workflow = 2  # Solar workflow
+    else:
+        monitored_path = "/data/EGAT/inspections/row"
+        workflow = 1  # Row workflow
+    
+    payload = {
+        "dag_run_id": f"manual-{filename}-{int(timezone.utc.now().timestamp())}",
+        "conf": {
+            "MonitoredPath": monitored_path,
+            "InspectionSubfolder": filename,
+            "Workflow": workflow
+        }
+    }
+    
+    try:
+        response = requests.post(
+            f"{airflow_url}/api/v1/dags/{dag_id}/dagRuns",
+            auth=(airflow_user, airflow_pass),
+            json=payload,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            return True, response.json().get("dag_run_id")
+        else:
+            return False, f"HTTP {response.status_code}: {response.text}"
+    except Exception as e:
+        return False, str(e)
 
 
 # ==================================================
@@ -315,15 +357,26 @@ def new_report_dialog():
                 pass
 
             # --------------------------------------------------
+            # Trigger Airflow DAG
+            # --------------------------------------------------
+
+            success, result = trigger_airflow_dag(filename, inspection_type="row")
+
+            if success:
+                st.success(
+                    f"Report '{filename}' created. Airflow DAG triggered: {result}"
+                )
+            else:
+                st.warning(
+                    f"Report '{filename}' created, but Airflow DAG trigger failed: {result}"
+                )
+
+            # --------------------------------------------------
             # Reset form
             # --------------------------------------------------
 
             st.session_state.form_key += 1
             st.session_state.inspection_type = None
-
-            st.success(
-                f"Report '{filename}' created."
-            )
 
             st.rerun()
 
@@ -534,8 +587,6 @@ def solar_inspection_page():
         # Create Dropbox trigger
         # --------------------------------------------------
 
-        sleep(2)
-
         dropbox_path = os.path.join(
             DEST_DIR,
             f"{filename}.dropbox",
@@ -545,15 +596,26 @@ def solar_inspection_page():
             pass
 
         # --------------------------------------------------
+        # Trigger Airflow DAG
+        # --------------------------------------------------
+
+        success, result = trigger_airflow_dag(filename, inspection_type="solar")
+
+        if success:
+            st.success(
+                f"Report '{filename}' created. Airflow DAG triggered: {result}"
+            )
+        else:
+            st.warning(
+                f"Report '{filename}' created, but Airflow DAG trigger failed: {result}"
+            )
+
+        # --------------------------------------------------
         # Reset form
         # --------------------------------------------------
 
         st.session_state.form_key += 1
         st.session_state.inspection_type = None
-
-        st.success(
-            f"Report '{filename}' created."
-        )
 
         st.rerun()
 

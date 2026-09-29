@@ -18,11 +18,16 @@ services:
     env_file:
       - .env
 
+    environment:
+      - AIRFLOW_URL=http://host.docker.internal:8083
+      - AIRFLOW_API_USER=airflow
+      - AIRFLOW_API_PASSWORD=airflow
+
     depends_on:
       - mysql
 
-    # extra_hosts:
-    #   - "host.docker.internal:host-gateway"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     networks:
       # - meiji-network
@@ -54,7 +59,7 @@ volumes:
   mysql_data:
 
 networks:
-  meiji-network:
-    external: true
+  # meiji-network:
+  #   external: true
   airflow-network:
     external: true
