@@ -44,8 +44,8 @@ def trigger_airflow_dag(filename, inspection_type="row"):
     
     payload = {
         # "dag_run_id": f"manual-{filename}-{int(timezone.utc.now().timestamp())}", dun work
-        # "dag_run_id": f"manual-{filename}-{int(datetime.now(timezone.utc).timestamp())}",
-        "dag_run_id": f"manual-{filename}-1760000000",
+        "dag_run_id": f"manual-{filename}-{int(datetime.now(timezone.utc).timestamp())}",
+        # "dag_run_id": f"manual-{filename}-1760000000",
         "conf": {
             "MonitoredPath": monitored_path,
             "InspectionSubfolder": filename,
