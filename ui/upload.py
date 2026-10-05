@@ -59,7 +59,7 @@ def trigger_airflow_dag(filename, inspection_type="row"):
             f"{airflow_url}/api/v1/dags/{dag_id}/dagRuns",
             auth=(airflow_user, airflow_pass),
             json=payload,
-            timeout=30
+            timeout=10
         )
         
         if response.status_code == 200:
