@@ -28,8 +28,8 @@ with open("/inspection/config.yml", "r") as f:
 
 def trigger_airflow_dag(filename, inspection_type="row"):
     """Trigger the EGATWorkflowPipeline DAG with the given inspection subfolder."""
-    # airflow_url = os.getenv("AIRFLOW_URL", "http://172.25.0.1:8083")
-    airflow_url = os.getenv("AIRFLOW_URL", "http://airflow-webserver:8080")
+    airflow_url = os.getenv("AIRFLOW_URL", "http://172.25.0.1:8083")
+    # airflow_url = os.getenv("AIRFLOW_URL", "http://airflow-webserver:8080")
     airflow_user = os.getenv("AIRFLOW_API_USER", "airflow")
     airflow_pass = os.getenv("AIRFLOW_API_PASSWORD", "airflow")
     
