@@ -3,6 +3,7 @@ import streamlit as st
 LOGO_ICON = "images/ST_logo_icon.png"
 LOGO_FULL = "images/ST_logo_full.png"
 
+
 st.logo(LOGO_FULL, icon_image=LOGO_ICON)
 
 st.set_page_config(
@@ -27,6 +28,7 @@ row_reports = st.Page(
     title="Right-of-Way Reports",
     icon="⚡️",
 )
+
 
 # solar_reports = st.Page(
 #     "pages/Solar_report.py",

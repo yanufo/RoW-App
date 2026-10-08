@@ -11,7 +11,6 @@ services:
       - /home:/home
       - /data:/data
       - /inspection:/inspection
-      # - /home/gve/.streamlit:/root/.streamlit
       - /home/gve/Downloads/row_inspection_renew/models:/models
       - /inspection/config.yml:/inspection/config.yml
 
@@ -30,7 +29,6 @@ services:
       - "host.docker.internal:host-gateway"
 
     networks:
-      # - meiji-network
       - airflow-network
 
 
@@ -51,7 +49,6 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 
     networks:
-      # - meiji-network
       - airflow-network
 
 
@@ -59,7 +56,5 @@ volumes:
   mysql_data:
 
 networks:
-  # meiji-network:
-  #   external: true
   airflow-network:
     external: true

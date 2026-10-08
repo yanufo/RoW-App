@@ -1,8 +1,3 @@
 directories:
-  #input: "/home/gve/Documents/EGAT/RoW-App/test_data/input"
-  # output: "/home/gve/Documents/EGAT/RoW-App/test_data/output"
   output: "/data/EGAT/inspections/output/row"
   solar_output: "/data/EGAT/inspections/output/solar"
-
-  # input: "/Users/wongwanyan/Documents/Staero/EGAT/row-app/test_data/input"
-  # output: "/Users/wongwanyan/Documents/Staero/EGAT/row-app/test_data/output"
